@@ -1,7 +1,39 @@
+.app-container {
+  display: flex;
+  height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.left-section {
+  flex: 1;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-right: 1px solid #ddd;
+}
+
+.transaction-table-container {
+  width: 30%;
+  background: #fdf2e9;
+  border-radius: 8px;
+  padding: 20px;
+  overflow-y: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.add-button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background: #ffa726;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
 }
 
 th, td {
@@ -16,6 +48,7 @@ th {
 }
 
 input {
+  width: 100%;
   border: none;
   background: transparent;
 }
@@ -27,4 +60,6 @@ input:focus {
 
 button {
   cursor: pointer;
+  border: none;
+  background: transparent;
 }
