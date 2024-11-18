@@ -30,6 +30,16 @@
   cursor: pointer;
 }
 
+.update-button {
+  padding: 10px 20px;
+  margin-left: 10px;
+  background: #ffa726;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;

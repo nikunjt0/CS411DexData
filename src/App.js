@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Papa from "papaparse";
 import Select from "react-select"; // Install react-select: `npm install react-select`
 import "./App.css";
 import {
@@ -17,79 +16,123 @@ function App() {
   const [selectedTokens, setSelectedTokens] = useState([]); // For storing selected tokens
   const [allTokens, setAllTokens] = useState([]); // For storing all unique token symbols
 
+  const fieldNames = [
+    "blockchain",
+    "project",
+    "version",
+    "block_month",
+    "block_date",
+    "block_time",
+    "block_number",
+    "token_bought_symbol",
+    "token_sold_symbol",
+    "token_pair",
+    "token_bought_amount",
+    "token_sold_amount",
+    "token_bought_amount_raw",
+    "token_sold_amount_raw",
+    "amount_usd",
+    "token_bought_address",
+    "token_sold_address",
+    "taker",
+    "maker",
+    "project_contract_address",
+    "tx_hash",
+    "tx_from",
+    "tx_to",
+    "evt_index",
+  ];
+
   useEffect(() => {
-    const fetchCSV = async () => {
-      console.log("Fetching CSV file...");
+    const fetchJSON = async () => {
+      console.log("Fetching JSON data...");
       try {
-        const response = await fetch("/DEX 411 Tables - Trades.csv"); // Adjust path if necessary
-        const csvText = await response.text();
+        const response = await fetch("http://localhost:5001/api/trades");
+        const jsonData = await response.json();
 
-        console.log("CSV file fetched successfully.");
-        console.log("Parsing CSV data...");
+        console.log("JSON data fetched successfully.", jsonData);
 
-        Papa.parse(csvText, {
-          header: true,
-          skipEmptyLines: true,
-          dynamicTyping: true,
-          transformHeader: (header) => header.trim(),
-          complete: (result) => {
-            console.log("CSV parsing complete. Parsed data:", result.data);
+        // Process the JSON data and map it to the table structure
+        const parsedData = jsonData.map((row) => ({
+          blockchain: row.blockchain !== undefined && row.blockchain !== null ? row.blockchain : "",
+          project: row.project !== undefined && row.project !== null ? row.project : "",
+          version: row.version !== undefined && row.version !== null ? parseInt(row.version, 10) : null,
+          block_month: row.block_month !== undefined && row.block_month !== null ? row.block_month : "",
+          block_date: row.block_date !== undefined && row.block_date !== null ? row.block_date : "",
+          block_time: row.block_time !== undefined && row.block_time !== null ? row.block_time : "",
+          block_number: row.block_number !== undefined && row.block_number !== null ? parseInt(row.block_number, 10) : null,
+          token_bought_symbol: row.token_bought_symbol !== undefined && row.token_bought_symbol !== null ? row.token_bought_symbol : "",
+          token_sold_symbol: row.token_sold_symbol !== undefined && row.token_sold_symbol !== null ? row.token_sold_symbol : "",
+          token_pair: row.token_pair !== undefined && row.token_pair !== null ? row.token_pair : "",
+          token_bought_amount: row.token_bought_amount !== undefined && row.token_bought_amount !== null ? parseFloat(row.token_bought_amount) : null,
+          token_sold_amount: row.token_sold_amount !== undefined && row.token_sold_amount !== null ? parseFloat(row.token_sold_amount) : null,
+          token_bought_amount_raw: row.token_bought_amount_raw !== undefined && row.token_bought_amount_raw !== null ? parseFloat(row.token_bought_amount_raw) : null,
+          token_sold_amount_raw: row.token_sold_amount_raw !== undefined && row.token_sold_amount_raw !== null ? parseFloat(row.token_sold_amount_raw) : null,
+          amount_usd: row.amount_usd !== undefined && row.amount_usd !== null ? parseFloat(row.amount_usd) : null,
+          token_bought_address: row.token_bought_address !== undefined && row.token_bought_address !== null ? row.token_bought_address : "",
+          token_sold_address: row.token_sold_address !== undefined && row.token_sold_address !== null ? row.token_sold_address : "",
+          taker: row.taker !== undefined && row.taker !== null ? row.taker : "",
+          maker: row.maker !== undefined && row.maker !== null ? row.maker : "",
+          project_contract_address: row.project_contract_address !== undefined && row.project_contract_address !== null ? row.project_contract_address : "",
+          tx_hash: row.tx_hash !== undefined && row.tx_hash !== null ? row.tx_hash : null,
+          tx_from: row.tx_from !== undefined && row.tx_from !== null ? row.tx_from : "",
+          tx_to: row.tx_to !== undefined && row.tx_to !== null ? row.tx_to : "",
+          evt_index: row.evt_index !== undefined && row.evt_index !== null ? parseInt(row.evt_index, 10) : null,
+        }));            
 
-            const parsedData = result.data.map((row) => ({
-              blockchain: row.blockchain || "",
-              project: row.project || "",
-              version: row.version || "",
-              block_month: row.block_month || "",
-              block_date: row.block_date || "",
-              block_time: row.block_time || "",
-              block_number: row.block_number || "",
-              token_bought_symbol: row.token_bought_symbol || "",
-              token_sold_symbol: row.token_sold_symbol || "",
-              token_pair: row.token_pair || "",
-              token_bought_amount: row.token_bought_amount || "",
-              token_sold_amount: row.token_sold_amount || "",
-              token_bought_amount_raw: row.token_bought_amount_raw || "",
-              token_sold_amount_raw: row.token_sold_amount_raw || "",
-              amount_usd: row.amount_usd || "",
-              token_bought_address: row.token_bought_address || "",
-              token_sold_address: row.token_sold_address || "",
-              taker: row.taker || "",
-              maker: row.maker || "",
-              project_contract_address: row.project_contract_address || "",
-              tx_hash: row.tx_hash || "",
-              tx_from: row.tx_from || "",
-              tx_to: row.tx_to || "",
-              evt_index: row.evt_index || "",
-            }));
+        console.log("Mapped JSON data to table structure:", parsedData);
+        setTransactions(parsedData);
 
-            console.log("Parsed data mapped to table structure:", parsedData);
-            setTransactions(parsedData);
-
-            const uniqueTokens = [
-              ...new Set(
-                parsedData.map((tx) => tx.token_bought_symbol).filter(Boolean)
-              ),
-            ];
-            setAllTokens(uniqueTokens.map((token) => ({ label: token, value: token })));
-          },
-          error: (error) => {
-            console.error("Error parsing CSV data:", error);
-          },
-        });
+        // Extract unique tokens for the dropdown
+        const uniqueTokens = [
+          ...new Set(
+            parsedData.map((tx) => tx.token_bought_symbol).filter(Boolean)
+          ),
+        ];
+        setAllTokens(uniqueTokens.map((token) => ({ label: token, value: token })));
       } catch (error) {
-        console.error("Error fetching CSV file:", error);
+        console.error("Error fetching JSON data:", error);
       }
     };
 
-    fetchCSV();
+    fetchJSON();
   }, []);
 
   // Update cell value
   const handleCellChange = (e, rowIndex, key) => {
-    const newTransactions = [...transactions];
-    newTransactions[rowIndex][key] = e.target.value;
-    setTransactions(newTransactions);
+    setTransactions((prevTransactions) => {
+      const updatedTransactions = [...prevTransactions];
+      const updatedRow = { ...updatedTransactions[rowIndex] };
+  
+      // Update the specific field based on its type
+      if (["evt_index", "version", "block_number"].includes(key)) {
+        updatedRow[key] = e.target.value === "" ? null : parseInt(e.target.value, 10);
+      } else if (
+        [
+          "token_bought_amount",
+          "token_sold_amount",
+          "token_bought_amount_raw",
+          "token_sold_amount_raw",
+          "amount_usd",
+        ].includes(key)
+      ) {
+        updatedRow[key] = e.target.value === "" ? null : parseFloat(e.target.value);
+      } else {
+        updatedRow[key] = e.target.value;
+      }
+  
+      updatedTransactions[rowIndex] = updatedRow;
+      return updatedTransactions;
+    });
   };
+  
+
+  useEffect(() => {
+    console.log("Updated Transactions:");
+    console.log(transactions);
+  }, [transactions]);
+  
+  
 
   // Add a new empty row
   const handleAddRow = () => {
@@ -98,9 +141,9 @@ function App() {
       blockchain: "",
       project: "",
       version: "",
-      block_month: now.toLocaleString("default", { month: "long" }), // e.g., "November"
-      block_date: now.getDate(), // e.g., 17
-      block_time: now.toTimeString().split(" ")[0], // e.g., "14:23:45"
+      block_month: "2024-11-01 0:00",
+      block_date: "2024-11-18 0:00",
+      block_time: "2024-11-18" + now.toTimeString().split(" ")[0],
       block_number: "",
       token_bought_symbol: "",
       token_sold_symbol: "",
@@ -120,15 +163,40 @@ function App() {
       tx_to: "",
       evt_index: "",
     };
-  
+
     // Prepend the new row to the transactions array
     setTransactions([newRow, ...transactions]);
-  };  
+  };
 
   // Delete a row
   const handleDeleteRow = (rowIndex) => {
     const newTransactions = transactions.filter((_, index) => index !== rowIndex);
     setTransactions(newTransactions);
+  };
+
+  const handleUpdate = async () => {
+    console.log(transactions);
+  
+    try {
+      const response = await fetch("http://localhost:5001/api/trades", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(transactions),
+      });
+  
+      if (response.ok) {
+        console.log("Transactions updated successfully.");
+        alert("Transactions updated successfully!");
+      } else {
+        console.error("Error updating transactions:", await response.text());
+        alert("Failed to update transactions.");
+      }
+    } catch (error) {
+      console.error("Error updating transactions:", error);
+      alert("Failed to update transactions.");
+    }
   };
 
   const validTransactions = transactions.filter(
@@ -213,45 +281,27 @@ function App() {
           <button onClick={handleAddRow} className="add-button">
             Add +
           </button>
+          <button onClick={handleUpdate} className="update-button">
+            Update Backend
+          </button>
         </div>
         <table>
           <thead>
             <tr>
-              <th>Blockchain</th>
-              <th>Project</th>
-              <th>Version</th>
-              <th>Block Month</th>
-              <th>Block Date</th>
-              <th>Block Time</th>
-              <th>Block Number</th>
-              <th>Token Bought Symbol</th>
-              <th>Token Sold Symbol</th>
-              <th>Token Pair</th>
-              <th>Token Bought Amount</th>
-              <th>Token Sold Amount</th>
-              <th>Token Bought Amount Raw</th>
-              <th>Token Sold Amount Raw</th>
-              <th>Amount USD</th>
-              <th>Token Bought Address</th>
-              <th>Token Sold Address</th>
-              <th>Taker</th>
-              <th>Maker</th>
-              <th>Project Contract Address</th>
-              <th>Tx Hash</th>
-              <th>Tx From</th>
-              <th>Tx To</th>
-              <th>Evt Index</th>
+              {fieldNames.map((fieldName) => (
+                <th key={fieldName}>{fieldName.replace(/_/g, ' ').toUpperCase()}</th>
+              ))}
               <th>Delete</th>
             </tr>
           </thead>
           <tbody>
             {transactions.map((transaction, rowIndex) => (
               <tr key={rowIndex}>
-                {Object.keys(transaction).map((key, cellIndex) => (
+                {fieldNames.map((key, cellIndex) => (
                   <td key={cellIndex}>
                     <input
                       type="text"
-                      value={transaction[key]}
+                      value={transaction[key] !== null ? transaction[key] : ""}
                       onChange={(e) => handleCellChange(e, rowIndex, key)}
                     />
                   </td>

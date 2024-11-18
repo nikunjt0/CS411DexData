@@ -6,14 +6,16 @@ const app = express();
 const PORT = 5001;
 
 // Middleware
+const compression = require("compression");
+app.use(compression());
 app.use(cors());
-app.use(express.json()); // Parse incoming JSON requests
+app.use(express.json({ limit: "10mb" }));
 
 // MySQL Database Connection
 const db = mysql.createConnection({
   host: "34.67.152.59", // Replace with your GCP MySQL instance Public IP
   user: "root",      // Replace with your database username
-  password: "blockchain",  // Replace with your database password
+  password: "thebestgroup",  // Replace with your database password
   database: "Crypto",       // Replace with your database name
 });
 
@@ -29,21 +31,84 @@ db.connect((err) => {
 
 /// Endpoint to fetch all trades
 app.get("/api/trades", (req, res) => {
-    const query = "SELECT * FROM Trades"; // Query the `Trades` table
-    db.query(query, (err, results) => {
-      if (err) {
-        console.error("Error fetching trades:", err);
-        res.status(500).json({ error: "Failed to fetch trades" });
-      } else {
-        res.json(results); // Send results as JSON response
+  const query = "SELECT * FROM Trades"; // Query the `Trades` table
+  console.log("call recognized");
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("Error fetching trades:", err);
+      res.status(500).json({ error: "Failed to fetch trades" });
+    } else {
+      console.log("successfully found data");
+      res.json(results); // Send results as JSON response
+    }
+  });
+});
+
+app.put("/api/trades", (req, res) => {
+  const transactions = req.body;
+
+  if (!Array.isArray(transactions)) {
+    return res.status(400).json({ error: "Invalid input format. Expected an array." });
+  }
+
+  const upsertPromises = transactions.map((transaction) => {
+    const { tx_hash, evt_index, ...data } = transaction;
+
+    if (!tx_hash || evt_index == null) {
+      console.error("Transaction is missing tx_hash or evt_index:", transaction);
+      return Promise.reject(new Error("Transaction is missing tx_hash or evt_index"));
+    }
+
+    // Replace empty strings with NULL for numeric fields
+    const sanitizedData = { ...data };
+    Object.keys(sanitizedData).forEach((key) => {
+      if (
+        [
+          "version",
+          "block_number",
+          "token_bought_amount",
+          "token_sold_amount",
+          "token_bought_amount_raw",
+          "token_sold_amount_raw",
+          "amount_usd",
+          "evt_index",
+        ].includes(key)
+      ) {
+        sanitizedData[key] =
+          sanitizedData[key] === "" || sanitizedData[key] === null
+            ? null
+            : sanitizedData[key];
       }
     });
+
+    const dataWithKeys = { tx_hash, evt_index, ...sanitizedData };
+
+    const query = "INSERT INTO Trades SET ? ON DUPLICATE KEY UPDATE ?";
+
+    return new Promise((resolve, reject) => {
+      db.query(query, [dataWithKeys, sanitizedData], (err, result) => {
+        if (err) {
+          console.error(
+            `Failed to upsert transaction with tx_hash ${tx_hash} and evt_index ${evt_index}:`,
+            err
+          );
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      });
+    });
   });
-  
-  // Start the server
-  app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
-  });
+
+  Promise.all(upsertPromises)
+    .then(() => {
+      res.status(200).json({ message: "All transactions upserted successfully." });
+    })
+    .catch((error) => {
+      console.error("Error upserting transactions:", error);
+      res.status(500).json({ error: "Failed to upsert transactions." });
+    });
+});
 
 // 2. Add a new transaction
 app.post("/api/transactions", (req, res) => {
