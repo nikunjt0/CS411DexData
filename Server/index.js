@@ -51,62 +51,80 @@ app.put("/api/trades", (req, res) => {
     return res.status(400).json({ error: "Invalid input format. Expected an array." });
   }
 
-  const upsertPromises = transactions.map((transaction) => {
-    const { tx_hash, evt_index, ...data } = transaction;
+  const promises = transactions.map((transaction) => {
+    const { tx_hash, evt_index, isDeleted, ...data } = transaction;
 
     if (!tx_hash || evt_index == null) {
       console.error("Transaction is missing tx_hash or evt_index:", transaction);
       return Promise.reject(new Error("Transaction is missing tx_hash or evt_index"));
     }
 
-    // Replace empty strings with NULL for numeric fields
-    const sanitizedData = { ...data };
-    Object.keys(sanitizedData).forEach((key) => {
-      if (
-        [
-          "version",
-          "block_number",
-          "token_bought_amount",
-          "token_sold_amount",
-          "token_bought_amount_raw",
-          "token_sold_amount_raw",
-          "amount_usd",
-          "evt_index",
-        ].includes(key)
-      ) {
-        sanitizedData[key] =
-          sanitizedData[key] === "" || sanitizedData[key] === null
-            ? null
-            : sanitizedData[key];
-      }
-    });
-
-    const dataWithKeys = { tx_hash, evt_index, ...sanitizedData };
-
-    const query = "INSERT INTO Trades SET ? ON DUPLICATE KEY UPDATE ?";
-
-    return new Promise((resolve, reject) => {
-      db.query(query, [dataWithKeys, sanitizedData], (err, result) => {
-        if (err) {
-          console.error(
-            `Failed to upsert transaction with tx_hash ${tx_hash} and evt_index ${evt_index}:`,
-            err
-          );
-          reject(err);
-        } else {
-          resolve(result);
+    if (isDeleted) {
+      // Handle deletion
+      const deleteQuery = "DELETE FROM Trades WHERE tx_hash = ? AND evt_index = ?";
+      return new Promise((resolve, reject) => {
+        db.query(deleteQuery, [tx_hash, evt_index], (err, result) => {
+          if (err) {
+            console.error(
+              `Failed to delete transaction with tx_hash ${tx_hash} and evt_index ${evt_index}:`,
+              err
+            );
+            reject(err);
+          } else {
+            resolve(result);
+          }
+        });
+      });
+    } else {
+      // Handle upsert
+      const sanitizedData = { ...data };
+      Object.keys(sanitizedData).forEach((key) => {
+        if (
+          [
+            "version",
+            "block_number",
+            "token_bought_amount",
+            "token_sold_amount",
+            "token_bought_amount_raw",
+            "token_sold_amount_raw",
+            "amount_usd",
+            "evt_index",
+          ].includes(key)
+        ) {
+          sanitizedData[key] =
+            sanitizedData[key] === "" || sanitizedData[key] === null
+              ? null
+              : sanitizedData[key];
         }
       });
-    });
+
+      const dataWithKeys = { tx_hash, evt_index, ...sanitizedData };
+
+      const upsertQuery = "INSERT INTO Trades SET ? ON DUPLICATE KEY UPDATE ?";
+
+      return new Promise((resolve, reject) => {
+        db.query(upsertQuery, [dataWithKeys, sanitizedData], (err, result) => {
+          if (err) {
+            console.error(
+              `Failed to upsert transaction with tx_hash ${tx_hash} and evt_index ${evt_index}:`,
+              err
+            );
+            reject(err);
+          } else {
+            resolve(result);
+          }
+        });
+      });
+    }
   });
 
-  Promise.all(upsertPromises)
+  Promise.all(promises)
     .then(() => {
-      res.status(200).json({ message: "All transactions upserted successfully." });
+      res.status(200).json({ message: "All transactions processed successfully." });
     })
     .catch((error) => {
-      console.error("Error upserting transactions:", error);
-      res.status(500).json({ error: "Failed to upsert transactions." });
+      console.error("Error processing transactions:", error);
+      res.status(500).json({ error: "Failed to process transactions." });
     });
 });
 
@@ -142,12 +160,14 @@ app.put("/api/transactions/:id", (req, res) => {
 // 4. Delete a transaction
 app.delete("/api/transactions/:id", (req, res) => {
   const { id } = req.params;
+  console.log("id");
   const query = "DELETE FROM transactions WHERE id = ?";
   db.query(query, id, (err) => {
     if (err) {
       console.error("Error deleting transaction:", err);
       res.status(500).json({ error: "Failed to delete transaction" });
     } else {
+      console.log("delete worked properly");
       res.sendStatus(200);
     }
   });

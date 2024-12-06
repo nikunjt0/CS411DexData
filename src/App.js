@@ -15,6 +15,8 @@ function App() {
   const [transactions, setTransactions] = useState([]);
   const [selectedTokens, setSelectedTokens] = useState([]); // For storing selected tokens
   const [allTokens, setAllTokens] = useState([]); // For storing all unique token symbols
+  const [isLoading, setIsLoading] = useState(false);
+  const [deletedTransactions, setDeletedTransactions] = useState([]);
 
   const fieldNames = [
     "blockchain",
@@ -170,12 +172,26 @@ function App() {
 
   // Delete a row
   const handleDeleteRow = (rowIndex) => {
+    const transactionToDelete = transactions[rowIndex];
+  
+    // Add the deleted transaction to a separate list for the backend
+    setDeletedTransactions((prevDeleted) => [
+      ...prevDeleted,
+      { ...transactionToDelete, isDeleted: true },
+    ]);
+  
+    // Remove the transaction from the frontend state
     const newTransactions = transactions.filter((_, index) => index !== rowIndex);
     setTransactions(newTransactions);
   };
 
   const handleUpdate = async () => {
-    console.log(transactions);
+    console.log("Updating transactions...");
+  
+    // Combine transactions with deleted transactions
+    const allTransactions = [...transactions, ...deletedTransactions];
+  
+    setIsLoading(true);
   
     try {
       const response = await fetch("http://localhost:5001/api/trades", {
@@ -183,12 +199,13 @@ function App() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(transactions),
+        body: JSON.stringify(allTransactions),
       });
   
       if (response.ok) {
         console.log("Transactions updated successfully.");
         alert("Transactions updated successfully!");
+        setDeletedTransactions([]); // Clear deleted transactions after successful update
       } else {
         console.error("Error updating transactions:", await response.text());
         alert("Failed to update transactions.");
@@ -196,8 +213,10 @@ function App() {
     } catch (error) {
       console.error("Error updating transactions:", error);
       alert("Failed to update transactions.");
+    } finally {
+      setIsLoading(false);
     }
-  };
+  };  
 
   const validTransactions = transactions.filter(
     (tx) =>
@@ -278,12 +297,15 @@ function App() {
       <div className="transaction-table-container">
         <div className="table-header">
           <h3>Transaction Data</h3>
-          <button onClick={handleAddRow} className="add-button">
-            Add +
-          </button>
-          <button onClick={handleUpdate} className="update-button">
-            Update Backend
-          </button>
+          <div className="button-container">
+            <button onClick={handleAddRow} className="add-button">
+              Add +
+            </button>
+            <button onClick={handleUpdate} className="update-button" disabled={isLoading}>
+              {isLoading ? "Updating..." : "Update Backend"}
+            </button>
+            {isLoading && <div className="spinner"></div>}
+          </div>
         </div>
         <table>
           <thead>
