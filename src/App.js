@@ -102,6 +102,7 @@ function App() {
 
   // Update cell value
   const handleCellChange = (e, rowIndex, key) => {
+    const inputValue = e.target.value;
     setTransactions((prevTransactions) => {
       const updatedTransactions = [...prevTransactions];
       const updatedRow = { ...updatedTransactions[rowIndex] };
@@ -118,7 +119,11 @@ function App() {
           "amount_usd",
         ].includes(key)
       ) {
-        updatedRow[key] = e.target.value === "" ? null : parseFloat(e.target.value);
+        if (inputValue === "" || inputValue === "-") {
+          updatedRow[key] = inputValue;
+        } else if (!isNaN(inputValue) && inputValue !== null) {
+          updatedRow[key] = parseFloat(inputValue);
+        }
       } else {
         updatedRow[key] = e.target.value;
       }
@@ -207,12 +212,14 @@ function App() {
         alert("Transactions updated successfully!");
         setDeletedTransactions([]); // Clear deleted transactions after successful update
       } else {
-        console.error("Error updating transactions:", await response.text());
-        alert("Failed to update transactions.");
+        // Extract and display the specific error message from the response
+        const errorText = await response.text();
+        console.error("Error updating transactions:", errorText);
+        alert(`Failed to update transactions: ${errorText}`);
       }
     } catch (error) {
       console.error("Error updating transactions:", error);
-      alert("Failed to update transactions.");
+      alert(`An error occurred: ${error.message}`);
     } finally {
       setIsLoading(false);
     }

@@ -124,7 +124,7 @@ app.put("/api/trades", (req, res) => {
     })
     .catch((error) => {
       console.error("Error processing transactions:", error);
-      res.status(500).json({ error: "Failed to process transactions." });
+      res.status(500).json({ error: error.sqlMessage || error.message || "An unknown error occurred" });
     });
 });
 
