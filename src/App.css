@@ -1,24 +1,61 @@
 .app-container {
   display: flex;
-  height: 100vh;
+  flex-direction: column;
   padding: 20px;
-  box-sizing: border-box;
+  gap: 20px;
+}
+
+.top-section {
+  display: flex;
+  gap: 20px;
+  width: 100%;
 }
 
 .left-section {
   flex: 1;
   padding: 20px;
   background-color: #f9f9f9;
-  border-right: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.charts-container {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.pie-chart-container {
+  flex: 1;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .transaction-table-container {
   width: 30%;
+  height: 70vh;
   background: #fdf2e9;
   border-radius: 8px;
   padding: 20px;
   overflow-y: auto;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.transaction-table-container table {
+  display: block;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.transaction-table-container thead {
+  position: sticky;
+  top: 0;
+  background: #fdf2e9;
+  z-index: 1;
 }
 
 .add-button {
@@ -103,4 +140,10 @@ button {
   100% {
     transform: rotate(360deg);
   }
+}
+
+.pie-chart-container h3 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
 }

@@ -9,6 +9,9 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 
 function App() {
@@ -17,6 +20,9 @@ function App() {
   const [allTokens, setAllTokens] = useState([]); // For storing all unique token symbols
   const [isLoading, setIsLoading] = useState(false);
   const [deletedTransactions, setDeletedTransactions] = useState([]);
+  const [blockchainData, setBlockchainData] = useState([]);
+const [dexData, setDexData] = useState([]);
+
 
   const fieldNames = [
     "blockchain",
@@ -100,6 +106,40 @@ function App() {
     fetchJSON();
   }, []);
 
+  useEffect(() => {
+    const fetchDetailedVolume = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5001/api/detailed-volume?dateLimit=2024-01-01"
+        );
+        const data = await response.json();
+  
+        // Transform blockchainBreakdown data
+        const blockchainChartData = data.blockchainBreakdown
+          .filter((item) => item.total_volume !== null && item.blockchain !== "")
+          .map((item) => ({
+            name: item.blockchain,
+            value: item.total_volume,
+          }));
+  
+        // Transform dexBreakdown data
+        const dexChartData = data.dexBreakdown
+          .filter((item) => item.total_volume_usd !== null && item.dex_name !== "")
+          .map((item) => ({
+            name: item.dex_name,
+            value: item.total_volume_usd,
+          }));
+  
+        setBlockchainData(blockchainChartData);
+        setDexData(dexChartData);
+      } catch (error) {
+        console.error("Error fetching detailed volume report:", error);
+      }
+    };
+  
+    fetchDetailedVolume();
+  }, []);
+  
   // Update cell value
   const handleCellChange = (e, rowIndex, key) => {
     const inputValue = e.target.value;
@@ -266,82 +306,148 @@ function App() {
         />
       </div>
 
-      <div className="left-section">
-        <h3>Latest DEX Market Data</h3>
-        <div style={{ height: "300px", width: "100%" }}>
-          <ResponsiveContainer>
-            <LineChart>
-              <XAxis
-                dataKey="label"
-                type="category"
-                tick={{ fontSize: 12 }}
-                label={{ value: "Date and Time", position: "insideBottom", fontSize: 14 }}
-                angle={-45}
-                textAnchor="end"
-              />
-              <YAxis
-                label={{ value: "Amount (USD)", angle: -90, position: "insideLeft", fontSize: 14 }}
-              />
-              <Tooltip formatter={(value, name) => [`$${value}`, name]} />
-              <Legend />
-              {filteredChartData.map((tokenData, index) => (
-                <Line
-                  key={tokenData.token.value}
-                  dataKey="amount_usd"
-                  data={tokenData.data}
-                  name={tokenData.token.label}
-                  type="monotone"
-                  stroke={`hsl(${index * 60}, 70%, 50%)`}
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
+      <div className="top-section">
+        <div className="left-section">
+          <h3>Latest DEX Market Data</h3>
+          <div style={{ height: "300px", width: "100%" }}>
+            <ResponsiveContainer>
+              <LineChart>
+                <XAxis
+                  dataKey="label"
+                  type="category"
+                  tick={{ fontSize: 12 }}
+                  label={{ value: "Date and Time", position: "insideBottom", fontSize: 14 }}
+                  angle={-45}
+                  textAnchor="end"
                 />
+                <YAxis
+                  label={{ value: "Amount (USD)", angle: -90, position: "insideLeft", fontSize: 14 }}
+                />
+                <Tooltip formatter={(value, name) => [`$${value}`, name]} />
+                <Legend />
+                {filteredChartData.map((tokenData, index) => (
+                  <Line
+                    key={tokenData.token.value}
+                    dataKey="amount_usd"
+                    data={tokenData.data}
+                    name={tokenData.token.label}
+                    type="monotone"
+                    stroke={`hsl(${index * 60}, 70%, 50%)`}
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="transaction-table-container">
+          <div className="table-header">
+            <h3>Transaction Data</h3>
+            <div className="button-container">
+              <button onClick={handleAddRow} className="add-button">
+                Add +
+              </button>
+              <button onClick={handleUpdate} className="update-button" disabled={isLoading}>
+                {isLoading ? "Updating..." : "Update Backend"}
+              </button>
+              {isLoading && <div className="spinner"></div>}
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                {fieldNames.map((fieldName) => (
+                  <th key={fieldName}>{fieldName.replace(/_/g, ' ').toUpperCase()}</th>
+                ))}
+                <th>Delete</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.map((transaction, rowIndex) => (
+                <tr key={rowIndex}>
+                  {fieldNames.map((key, cellIndex) => (
+                    <td key={cellIndex}>
+                      <input
+                        type="text"
+                        value={transaction[key] !== null ? transaction[key] : ""}
+                        onChange={(e) => handleCellChange(e, rowIndex, key)}
+                      />
+                    </td>
+                  ))}
+                  <td>
+                    <button onClick={() => handleDeleteRow(rowIndex)}>🗑️</button>
+                  </td>
+                </tr>
               ))}
-            </LineChart>
-          </ResponsiveContainer>
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <div className="transaction-table-container">
-        <div className="table-header">
-          <h3>Transaction Data</h3>
-          <div className="button-container">
-            <button onClick={handleAddRow} className="add-button">
-              Add +
-            </button>
-            <button onClick={handleUpdate} className="update-button" disabled={isLoading}>
-              {isLoading ? "Updating..." : "Update Backend"}
-            </button>
-            {isLoading && <div className="spinner"></div>}
+      <div className="charts-container">
+        <div className="pie-chart-container">
+          <h3>Blockchain Volume Distribution</h3>
+          <div style={{ height: "300px", width: "100%" }}>
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie
+                  data={blockchainData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  fill="#8884d8"
+                  label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
+                >
+                  {blockchainData.map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={`hsl(${index * 45}, 70%, 50%)`}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(value) => `$${Number(value).toLocaleString()}`}
+                />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
         </div>
-        <table>
-          <thead>
-            <tr>
-              {fieldNames.map((fieldName) => (
-                <th key={fieldName}>{fieldName.replace(/_/g, ' ').toUpperCase()}</th>
-              ))}
-              <th>Delete</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.map((transaction, rowIndex) => (
-              <tr key={rowIndex}>
-                {fieldNames.map((key, cellIndex) => (
-                  <td key={cellIndex}>
-                    <input
-                      type="text"
-                      value={transaction[key] !== null ? transaction[key] : ""}
-                      onChange={(e) => handleCellChange(e, rowIndex, key)}
+
+        <div className="pie-chart-container">
+          <h3>DEX Volume Distribution</h3>
+          <div style={{ height: "300px", width: "100%" }}>
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie
+                  data={dexData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  fill="#82ca9d"
+                  label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
+                >
+                  {dexData.map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={`hsl(${index * 45 + 120}, 70%, 50%)`}
                     />
-                  </td>
-                ))}
-                <td>
-                  <button onClick={() => handleDeleteRow(rowIndex)}>🗑️</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(value) => `$${Number(value).toLocaleString()}`}
+                />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
     </div>
   );

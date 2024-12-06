@@ -44,6 +44,29 @@ app.get("/api/trades", (req, res) => {
   });
 });
 
+app.get("/api/detailed-volume", (req, res) => {
+  // Retrieve the dateLimit from the query parameters
+  const dateLimit = req.query.dateLimit || "2020-01-01"; // Default value if not provided
+
+  // Define the SQL query to call the stored procedure
+  const query = "CALL GetDetailedVolumeReport(?)";
+
+  // Execute the query with the dateLimit parameter
+  db.query(query, [dateLimit], (err, results) => {
+      if (err) {
+          console.error("Error executing stored procedure:", err);
+          res.status(500).json({ error: "Failed to fetch detailed volume report" });
+      } else {
+          // Since stored procedures can return multiple result sets, process the results
+          res.json({
+              blockchainBreakdown: results[0], // First result set
+              dexBreakdown: results[1] || [],  // Second result set (if any)
+          });
+      }
+  });
+});
+
+
 app.put("/api/trades", (req, res) => {
   const transactions = req.body;
 
