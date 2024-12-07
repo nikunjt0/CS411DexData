@@ -12,7 +12,7 @@ import {
   PieChart,
   Pie,
   Cell,
-} from "recharts";
+} from "recharts"; 
 
 function App() {
   const [transactions, setTransactions] = useState([]);
@@ -21,9 +21,21 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [deletedTransactions, setDeletedTransactions] = useState([]);
   const [blockchainData, setBlockchainData] = useState([]);
-const [dexData, setDexData] = useState([]);
+  const [dexData, setDexData] = useState([]);
 
-
+  const highContrastColors = [
+    "#FF5733", // Bright red
+    "#33FF57", // Bright green
+    "#3357FF", // Bright blue
+    "#F4C20D", // Yellow
+    "#8E44AD", // Purple
+    "#16A085", // Teal
+    "#E67E22", // Orange
+    "#2ECC71", // Light green
+    "#2980B9", // Deep blue
+    "#C0392B", // Dark red
+  ];  
+  
   const fieldNames = [
     "blockchain",
     "project",
@@ -400,12 +412,12 @@ const [dexData, setDexData] = useState([]);
                   cy="50%"
                   outerRadius={100}
                   fill="#8884d8"
-                  label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                 >
                   {blockchainData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={`hsl(${index * 45}, 70%, 50%)`}
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={highContrastColors[index % highContrastColors.length] || `hsl(${index * 30}, 70%, 50%)`}
                     />
                   ))}
                 </Pie>
@@ -431,12 +443,12 @@ const [dexData, setDexData] = useState([]);
                   cy="50%"
                   outerRadius={100}
                   fill="#82ca9d"
-                  label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                 >
                   {dexData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={`hsl(${index * 45 + 120}, 70%, 50%)`}
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={highContrastColors[index % highContrastColors.length] || `hsl(${index * 30 + 120}, 70%, 50%)`}
                     />
                   ))}
                 </Pie>
