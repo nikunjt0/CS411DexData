@@ -66,6 +66,18 @@ app.get("/api/detailed-volume", (req, res) => {
   });
 });
 
+app.get("/api/leaderboard-top-token-pairs", (req, res) => {
+  const query = "CALL leaderboard_top_token_pairs()";
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("Error executing stored procedure:", err);
+      res.status(500).json({ error: "Failed to fetch leaderboard data" });
+    } else {
+      res.json(results[0]);
+    }
+  });
+});
 
 app.put("/api/trades", (req, res) => {
   const transactions = req.body;

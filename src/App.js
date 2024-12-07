@@ -22,6 +22,7 @@ function App() {
   const [deletedTransactions, setDeletedTransactions] = useState([]);
   const [blockchainData, setBlockchainData] = useState([]);
   const [dexData, setDexData] = useState([]);
+  const [leaderboardData, setLeaderboardData] = useState([]);
 
   const highContrastColors = [
     "#FF5733", // Bright red
@@ -62,6 +63,20 @@ function App() {
     "tx_to",
     "evt_index",
   ];
+
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        const response = await fetch("http://localhost:5001/api/leaderboard-top-token-pairs");
+        const data = await response.json();
+        setLeaderboardData(data); // Update state with the fetched leaderboard data
+      } catch (error) {
+        console.error("Error fetching leaderboard data:", error);
+      }
+    };
+  
+    fetchLeaderboard();
+  }, []);  
 
   useEffect(() => {
     const fetchJSON = async () => {
@@ -458,6 +473,29 @@ function App() {
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
+
+            <div className="leaderboard-container">
+              <div>
+                <h3 className="leaderboard-title">Leaderboard - Top Token Pairs</h3>
+                <table className="leaderboard-table">
+                  <thead>
+                    <tr>
+                      <th>Token Pair</th>
+                      <th>Total Value Traded (USD)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {leaderboardData.map((item, index) => (
+                      <tr key={index}>
+                        <td>{item.token_pair}</td>
+                        <td>{Number(item.total_value_traded).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
