@@ -1,70 +1,111 @@
-# Getting Started with Create React App
+# 📈 CEX vs DEX Crypto Dashboard
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-stack cryptocurrency analytics dashboard that compares Centralized Exchanges (CEXs) and Decentralized Exchanges (DEXs). This project provides real-time insights into token trading activity across blockchains and exchange types. Users can view charts, analyze trade data, and modify records via an interactive frontend synced with a MySQL backend.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🧩 Features
 
-### `npm start`
+### Frontend
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- 🌐 Built with React
+- 📊 **Line Chart**: Visualizes USD volume of selected tokens over time
+- 🥧 **Pie Charts**:
+  - Volume by Blockchain
+  - Volume by DEX
+- 🏆 **Leaderboard**: Top token pairs by traded volume
+- 📋 **Editable Table**:
+  - Inline editing of trade data
+  - Add/delete transactions
+  - Sync updates to backend
+- 🔎 **Token Selector**: Filter data by token symbols
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Backend
 
-### `npm test`
+- 🖥️ Express.js REST API
+- 🧠 SQL stored procedures for complex queries
+- 💽 GCP-hosted MySQL database (`Crypto`)
+- 🔁 Upsert logic using `INSERT ... ON DUPLICATE KEY UPDATE`
+- 🧹 Soft-delete logic for table entries
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## 🛠️ Tech Stack
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+| Layer     | Technology                             |
+|-----------|-----------------------------------------|
+| Frontend  | React, Recharts, react-select, CSS      |
+| Backend   | Node.js, Express.js, MySQL              |
+| Database  | Google Cloud SQL (MySQL)                |
+| Testing   | Jest, React Testing Library             |
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+---
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 🖼️ Architecture Overview
 
-### `npm run eject`
+```text
+Frontend (React + Recharts)
+       │
+       ▼
+Express.js API (localhost:5001)
+       │
+       ▼
+Google Cloud MySQL (Crypto database)
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+---
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## 📦 Tech Stack
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+| Layer     | Technology                             |
+|-----------|-----------------------------------------|
+| Frontend  | React, Recharts, react-select, CSS      |
+| Backend   | Node.js, Express.js, MySQL              |
+| Hosting   | GCP MySQL (Google Cloud SQL)            |
+| Styling   | Custom CSS, Flexbox                     |
+| Testing   | Jest, React Testing Library             |
 
-## Learn More
+---
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 🔧 Installation & Setup
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Frontend
 
-### Code Splitting
+```bash
+# Clone the repo
+git clone https://github.com/your-org/cex-dex-dashboard.git
+cd frontend
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+# Install dependencies
+npm install
 
-### Analyzing the Bundle Size
+# Start development server
+npm start
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Backend
 
-### Making a Progressive Web App
+# Navigate to backend folder
+cd backend
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+# Install dependencies
+npm install
 
-### Advanced Configuration
+# Start the backend server
+node index.js
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
 
-### Deployment
+## 💡 Use Cases
+- Compare DEX vs CEX market volumes
+- Analyze trade activity by blockchain
+- Discover high-performing token pairs
+- Modify and sync transaction data in real-time
+- Use as a teaching tool for DeFi or SQL visualization
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## 🔮 Future Improvements
+- Add real CEX data from Binance/Coinbase APIs
+- Authentication and user roles
+- Export charts as PNG/CSV
+- Pagination and filtering for transaction tables
+- Host on Vercel + Render + PlanetScale
